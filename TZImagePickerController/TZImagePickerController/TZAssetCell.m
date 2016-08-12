@@ -213,7 +213,7 @@
 #pragma mark - Lazy load
 
 - (UIImageView *)posterImageView {
-    if (_posterImageView == nil) {
+    if (_arrowImageView == nil) {
         UIImageView *posterImageView = [[UIImageView alloc] init];
         posterImageView.contentMode = UIViewContentModeScaleAspectFill;
         posterImageView.clipsToBounds = YES;

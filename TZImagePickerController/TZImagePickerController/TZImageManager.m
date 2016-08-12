@@ -12,10 +12,7 @@
 #import "TZImagePickerController.h"
 
 @interface TZImageManager ()
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 @property (nonatomic, strong) ALAssetsLibrary *assetLibrary;
-#pragma clang diagnostic pop
 @end
 
 @implementation TZImageManager
@@ -30,7 +27,7 @@ static CGFloat TZScreenScale;
     dispatch_once(&onceToken, ^{
         manager = [[self alloc] init];
         manager.cachingImageManager = [[PHCachingImageManager alloc] init];
-        // manager.cachingImageManager.allowsCachingHighQualityImages = YES;
+        manager.cachingImageManager.allowsCachingHighQualityImages = NO;
         
         TZScreenWidth = [UIScreen mainScreen].bounds.size.width;
         // 测试发现，如果scale在plus真机上取到3.0，内存会增大特别多。故这里写死成2.0
@@ -45,11 +42,8 @@ static CGFloat TZScreenScale;
     return manager;
 }
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 - (ALAssetsLibrary *)assetLibrary {
     if (_assetLibrary == nil) _assetLibrary = [[ALAssetsLibrary alloc] init];
-#pragma clang diagnostic pop
     return _assetLibrary;
 }
 
@@ -58,10 +52,7 @@ static CGFloat TZScreenScale;
     if (iOS8Later) {
         if ([PHPhotoLibrary authorizationStatus] == PHAuthorizationStatusAuthorized) return YES;
     } else {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
         if ([ALAssetsLibrary authorizationStatus] == ALAuthorizationStatusAuthorized) return YES;
-#pragma clang diagnostic pop
     }
     return NO;
 }
@@ -89,13 +80,9 @@ static CGFloat TZScreenScale;
             }
         }
     } else {
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
         [self.assetLibrary enumerateGroupsWithTypes:ALAssetsGroupAll usingBlock:^(ALAssetsGroup *group, BOOL *stop) {
             if ([group numberOfAssets] < 1) return;
             NSString *name = [group valueForProperty:ALAssetsGroupPropertyName];
-#pragma clang diagnostic pop
             if ([name isEqualToString:@"Camera Roll"] || [name isEqualToString:@"相机胶卷"] || [name isEqualToString:@"所有照片"] || [name isEqualToString:@"All Photos"]) {
                 model = [self modelWithResult:group name:name];
                 if (completion) completion(model);
@@ -126,7 +113,7 @@ static CGFloat TZScreenScale;
             PHFetchResult *fetchResult = [PHAsset fetchAssetsInAssetCollection:collection options:option];
             if (fetchResult.count < 1) continue;
             if ([collection.localizedTitle containsString:@"Deleted"] || [collection.localizedTitle isEqualToString:@"最近删除"]) continue;
-            if ([collection.localizedTitle isEqualToString:@"Camera Roll"] || [collection.localizedTitle isEqualToString:@"相机胶卷"] || [collection.localizedTitle isEqualToString:@"所有照片"] || [collection.localizedTitle isEqualToString:@"All Photos"]) {
+            if ([collection.localizedTitle isEqualToString:@"Camera Roll"] || [collection.localizedTitle isEqualToString:@"相机胶卷"]) {
                 [albumArr insertObject:[self modelWithResult:fetchResult name:collection.localizedTitle] atIndex:0];
             } else {
                 [albumArr addObject:[self modelWithResult:fetchResult name:collection.localizedTitle]];
@@ -138,37 +125,23 @@ static CGFloat TZScreenScale;
             PHFetchResult *fetchResult = [PHAsset fetchAssetsInAssetCollection:collection options:option];
             if (fetchResult.count < 1) continue;
             if ([collection.localizedTitle isEqualToString:@"My Photo Stream"] || [collection.localizedTitle isEqualToString:@"我的照片流"]) {
-                if (albumArr.count) {
-                    [albumArr insertObject:[self modelWithResult:fetchResult name:collection.localizedTitle] atIndex:1];
-                } else {
-                    [albumArr addObject:[self modelWithResult:fetchResult name:collection.localizedTitle]];
-                }
+                [albumArr insertObject:[self modelWithResult:fetchResult name:collection.localizedTitle] atIndex:1];
             } else {
                 [albumArr addObject:[self modelWithResult:fetchResult name:collection.localizedTitle]];
             }
         }
         if (completion && albumArr.count > 0) completion(albumArr);
     } else {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
         [self.assetLibrary enumerateGroupsWithTypes:ALAssetsGroupAll usingBlock:^(ALAssetsGroup *group, BOOL *stop) {
-#pragma clang diagnostic pop
             if (group == nil) {
                 if (completion && albumArr.count > 0) completion(albumArr);
             }
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
             if ([group numberOfAssets] < 1) return;
             NSString *name = [group valueForProperty:ALAssetsGroupPropertyName];
-#pragma clang diagnostic pop
-            if ([name isEqualToString:@"Camera Roll"] || [name isEqualToString:@"相机胶卷"] || [name isEqualToString:@"所有照片"] || [name isEqualToString:@"All Photos"]) {
+            if ([name isEqualToString:@"Camera Roll"] || [name isEqualToString:@"相机胶卷"]) {
                 [albumArr insertObject:[self modelWithResult:group name:name] atIndex:0];
             } else if ([name isEqualToString:@"My Photo Stream"] || [name isEqualToString:@"我的照片流"]) {
-                if (albumArr.count) {
-                    [albumArr insertObject:[self modelWithResult:group name:name] atIndex:1];
-                } else {
-                    [albumArr addObject:[self modelWithResult:group name:name]];
-                }
+                [albumArr insertObject:[self modelWithResult:group name:name] atIndex:1];
             } else {
                 [albumArr addObject:[self modelWithResult:group name:name]];
             }
@@ -201,8 +174,6 @@ static CGFloat TZScreenScale;
             [photoArr addObject:[TZAssetModel modelWithAsset:asset type:type timeLength:timeLength]];
         }];
         if (completion) completion(photoArr);
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     } else if ([result isKindOfClass:[ALAssetsGroup class]]) {
         ALAssetsGroup *group = (ALAssetsGroup *)result;
         if (allowPickingImage && allowPickingVideo) {
@@ -213,7 +184,6 @@ static CGFloat TZScreenScale;
             [group setAssetsFilter:[ALAssetsFilter allPhotos]];
         }
         ALAssetsGroupEnumerationResultsBlock resultBlock = ^(ALAsset *result, NSUInteger index, BOOL *stop)  {
-#pragma clang diagnostic pop
             if (result == nil) {
                 if (completion) completion(photoArr);
             }
@@ -223,12 +193,9 @@ static CGFloat TZScreenScale;
                 return;
             }
             /// Allow picking video
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
             if ([[result valueForProperty:ALAssetPropertyType] isEqualToString:ALAssetTypeVideo]) {
                 type = TZAssetModelMediaTypeVideo;
                 NSTimeInterval duration = [[result valueForProperty:ALAssetPropertyDuration] integerValue];
-#pragma clang diagnostic pop
                 NSString *timeLength = [NSString stringWithFormat:@"%0.0f",duration];
                 timeLength = [self getNewTimeFromDurationSecond:timeLength.integerValue];
                 [photoArr addObject:[TZAssetModel modelWithAsset:result type:type timeLength:timeLength]];
@@ -236,18 +203,12 @@ static CGFloat TZScreenScale;
                 [photoArr addObject:[TZAssetModel modelWithAsset:result type:type]];
             }
         };
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
         if (self.sortAscendingByModificationDate) {
             [group enumerateAssetsUsingBlock:^(ALAsset *result, NSUInteger index, BOOL *stop) {
                 if (resultBlock) { resultBlock(result,index,stop); }
-#pragma clang diagnostic pop
             }];
         } else {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
             [group enumerateAssetsWithOptions:NSEnumerationReverse usingBlock:^(ALAsset *result, NSUInteger index, BOOL *stop) {
-#pragma clang diagnostic pop
                 if (resultBlock) { resultBlock(result,index,stop); }
             }];
         }
@@ -255,18 +216,10 @@ static CGFloat TZScreenScale;
 }
 
 ///  Get asset at index 获得下标为index的单个照片
-///  if index beyond bounds, return nil in callback 果索引越界, 在回调中返回 nil
 - (void)getAssetFromFetchResult:(id)result atIndex:(NSInteger)index allowPickingVideo:(BOOL)allowPickingVideo allowPickingImage:(BOOL)allowPickingImage completion:(void (^)(TZAssetModel *))completion {
     if ([result isKindOfClass:[PHFetchResult class]]) {
         PHFetchResult *fetchResult = (PHFetchResult *)result;
-        PHAsset *asset;
-        @try {
-            asset = fetchResult[index];
-        }
-        @catch (NSException* e) {
-            if (completion) completion(nil);
-            return;
-        }
+        PHAsset *asset = fetchResult[index];
         
         TZAssetModelMediaType type = TZAssetModelMediaTypePhoto;
         if (asset.mediaType == PHAssetMediaTypeVideo)      type = TZAssetModelMediaTypeVideo;
@@ -280,8 +233,6 @@ static CGFloat TZScreenScale;
         timeLength = [self getNewTimeFromDurationSecond:timeLength.integerValue];
         TZAssetModel *model = [TZAssetModel modelWithAsset:asset type:type timeLength:timeLength];
         if (completion) completion(model);
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     } else if ([result isKindOfClass:[ALAssetsGroup class]]) {
         ALAssetsGroup *group = (ALAssetsGroup *)result;
         if (allowPickingImage && allowPickingVideo) {
@@ -291,44 +242,27 @@ static CGFloat TZScreenScale;
         } else if (allowPickingImage) {
             [group setAssetsFilter:[ALAssetsFilter allPhotos]];
         }
-#pragma clang diagnostic pop
         NSIndexSet *indexSet = [NSIndexSet indexSetWithIndex:index];
-        
-        @try {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-            [group enumerateAssetsAtIndexes:indexSet options:NSEnumerationConcurrent usingBlock:^(ALAsset *result, NSUInteger index, BOOL *stop) {
-#pragma clang diagnostic pop
-                
-                if (!result) return;
-                
-                TZAssetModel *model;
-                TZAssetModelMediaType type = TZAssetModelMediaTypePhoto;
-                if (!allowPickingVideo){
-                    model = [TZAssetModel modelWithAsset:result type:type];
-                    if (completion) completion(model);
-                    return;
-                }
-                /// Allow picking video
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-                if ([[result valueForProperty:ALAssetPropertyType] isEqualToString:ALAssetTypeVideo]) {
-                    type = TZAssetModelMediaTypeVideo;
-                    NSTimeInterval duration = [[result valueForProperty:ALAssetPropertyDuration] integerValue];
-#pragma clang diagnostic pop
-                    NSString *timeLength = [NSString stringWithFormat:@"%0.0f",duration];
-                    timeLength = [self getNewTimeFromDurationSecond:timeLength.integerValue];
-                    model = [TZAssetModel modelWithAsset:result type:type timeLength:timeLength];
-                } else {
-                    model = [TZAssetModel modelWithAsset:result type:type];
-                }
+        [group enumerateAssetsAtIndexes:indexSet options:NSEnumerationConcurrent usingBlock:^(ALAsset *result, NSUInteger index, BOOL *stop) {
+            TZAssetModel *model;
+            TZAssetModelMediaType type = TZAssetModelMediaTypePhoto;
+            if (!allowPickingVideo){
+                model = [TZAssetModel modelWithAsset:result type:type];
                 if (completion) completion(model);
-            }];
-
-        }
-        @catch (NSException* e) {
-            if (completion) completion(nil);
-        }
+                return;
+            }
+            /// Allow picking video
+            if ([[result valueForProperty:ALAssetPropertyType] isEqualToString:ALAssetTypeVideo]) {
+                type = TZAssetModelMediaTypeVideo;
+                NSTimeInterval duration = [[result valueForProperty:ALAssetPropertyDuration] integerValue];
+                NSString *timeLength = [NSString stringWithFormat:@"%0.0f",duration];
+                timeLength = [self getNewTimeFromDurationSecond:timeLength.integerValue];
+                model = [TZAssetModel modelWithAsset:result type:type timeLength:timeLength];
+            } else {
+                model = [TZAssetModel modelWithAsset:result type:type];
+            }
+            if (completion) completion(model);
+        }];
     }
 }
 
@@ -365,12 +299,9 @@ static CGFloat TZScreenScale;
                     if (completion) completion(bytes);
                 }
             }];
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
         } else if ([model.asset isKindOfClass:[ALAsset class]]) {
             ALAssetRepresentation *representation = [model.asset defaultRepresentation];
             if (model.type != TZAssetModelMediaTypeVideo) dataLength += (NSInteger)representation.size;
-#pragma clang diagnostic pop
             if (i >= photos.count - 1) {
                 NSString *bytes = [self getBytesFromDataLength:dataLength];
                 if (completion) completion(bytes);
@@ -440,24 +371,18 @@ static CGFloat TZScreenScale;
             }
         }];
         return imageRequestID;
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     } else if ([asset isKindOfClass:[ALAsset class]]) {
         ALAsset *alAsset = (ALAsset *)asset;
         dispatch_async(dispatch_get_global_queue(0,0), ^{
             CGImageRef thumbnailImageRef = alAsset.thumbnail;
             UIImage *thumbnailImage = [UIImage imageWithCGImage:thumbnailImageRef scale:2.0 orientation:UIImageOrientationUp];
-#pragma clang diagnostic pop
             dispatch_async(dispatch_get_main_queue(), ^{
                 if (completion) completion(thumbnailImage,nil,YES);
                 
                 if (photoWidth == TZScreenWidth || photoWidth == _photoPreviewMaxWidth) {
                     dispatch_async(dispatch_get_global_queue(0,0), ^{
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
                         ALAssetRepresentation *assetRep = [alAsset defaultRepresentation];
                         CGImageRef fullScrennImageRef = [assetRep fullScreenImage];
-#pragma clang diagnostic pop
                         UIImage *fullScrennImage = [UIImage imageWithCGImage:fullScrennImageRef scale:2.0 orientation:UIImageOrientationUp];
                         
                         dispatch_async(dispatch_get_main_queue(), ^{
@@ -482,11 +407,8 @@ static CGFloat TZScreenScale;
             if (completion) completion(photo);
         }];
     } else {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
         ALAssetsGroup *group = model.result;
         UIImage *postImage = [UIImage imageWithCGImage:group.posterImage];
-#pragma clang diagnostic pop
         if (completion) completion(postImage);
     }
 }
@@ -503,18 +425,12 @@ static CGFloat TZScreenScale;
                 if (completion) completion(result,info);
             }
         }];
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     } else if ([asset isKindOfClass:[ALAsset class]]) {
         ALAsset *alAsset = (ALAsset *)asset;
         ALAssetRepresentation *assetRep = [alAsset defaultRepresentation];
-#pragma clang diagnostic pop
         
         dispatch_async(dispatch_get_global_queue(0,0), ^{
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
             CGImageRef originalImageRef = [assetRep fullResolutionImage];
-#pragma clang diagnostic pop
             UIImage *originalImage = [UIImage imageWithCGImage:originalImageRef scale:1.0 orientation:UIImageOrientationUp];
             
             dispatch_async(dispatch_get_main_queue(), ^{
@@ -543,10 +459,7 @@ static CGFloat TZScreenScale;
             });
         }];
     } else {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
         [self.assetLibrary writeImageToSavedPhotosAlbum:image.CGImage orientation:[self orientationFromImage:image] completionBlock:^(NSURL *assetURL, NSError *error) {
-#pragma clang diagnostic pop
             if (error) {
                 NSLog(@"保存图片失败:%@",error.localizedDescription);
             } else {
@@ -566,14 +479,11 @@ static CGFloat TZScreenScale;
         [[PHImageManager defaultManager] requestPlayerItemForVideo:asset options:nil resultHandler:^(AVPlayerItem * _Nullable playerItem, NSDictionary * _Nullable info) {
             if (completion) completion(playerItem,info);
         }];
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     } else if ([asset isKindOfClass:[ALAsset class]]) {
         ALAsset *alAsset = (ALAsset *)asset;
         ALAssetRepresentation *defaultRepresentation = [alAsset defaultRepresentation];
         NSString *uti = [defaultRepresentation UTI];
         NSURL *videoURL = [[asset valueForProperty:ALAssetPropertyURLs] valueForKey:uti];
-#pragma clang diagnostic pop
         AVPlayerItem *playerItem = [[AVPlayerItem alloc] initWithURL:videoURL];
         if (completion && playerItem) completion(playerItem,nil);
     }
@@ -581,7 +491,7 @@ static CGFloat TZScreenScale;
 
 #pragma mark - Export video
 
-/// Export Video / 导出视频
+/// Export Video / 导出视频，暂仅仅支持iOS8.0+
 - (void)getVideoOutputPathWithAsset:(id)asset completion:(void (^)(NSString *outputPath))completion {
     if ([asset isKindOfClass:[PHAsset class]]) {
         PHVideoRequestOptions* options = [[PHVideoRequestOptions alloc] init];
@@ -590,76 +500,45 @@ static CGFloat TZScreenScale;
         options.networkAccessAllowed = YES;
         [[PHImageManager defaultManager] requestAVAssetForVideo:asset options:options resultHandler:^(AVAsset* avasset, AVAudioMix* audioMix, NSDictionary* info){
             // NSLog(@"Info:\n%@",info);
-            AVURLAsset *videoAsset = (AVURLAsset*)avasset;
+            AVURLAsset* myAsset = (AVURLAsset*)avasset;
             // NSLog(@"AVAsset URL: %@",myAsset.URL);
-            [self startExportVideoWithVideoAsset:videoAsset completion:completion];
-        }];
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    } else if ([asset isKindOfClass:[ALAsset class]]) {
-        NSURL *videoURL =[asset valueForProperty:ALAssetPropertyAssetURL]; // ALAssetPropertyURLs
-#pragma clang diagnostic pop
-        AVURLAsset *videoAsset = [[AVURLAsset alloc]initWithURL:videoURL options:nil];
-        [self startExportVideoWithVideoAsset:videoAsset completion:completion];
-    }
-}
-
-- (void)startExportVideoWithVideoAsset:(AVURLAsset *)videoAsset completion:(void (^)(NSString *outputPath))completion {
-    // Find compatible presets by video asset.
-    NSArray *presets = [AVAssetExportSession exportPresetsCompatibleWithAsset:videoAsset];
-    
-    // Begin to compress video
-    // Now we just compress to low resolution if it supports
-    // If you need to upload to the server, but server does't support to upload by streaming,
-    // You can compress the resolution to lower. Or you can support more higher resolution.
-    if ([presets containsObject:AVAssetExportPreset640x480]) {
-        AVAssetExportSession *session = [[AVAssetExportSession alloc]initWithAsset:videoAsset presetName:AVAssetExportPreset640x480];
-        
-        NSDateFormatter *formater = [[NSDateFormatter alloc] init];
-        [formater setDateFormat:@"yyyy-MM-dd-HH:mm:ss"];
-        NSString *outputPath = [NSHomeDirectory() stringByAppendingFormat:@"/tmp/output-%@.mp4", [formater stringFromDate:[NSDate date]]];
-        NSLog(@"video outputPath = %@",outputPath);
-        session.outputURL = [NSURL fileURLWithPath:outputPath];
-        
-        // Optimize for network use.
-        session.shouldOptimizeForNetworkUse = true;
-        
-        NSArray *supportedTypeArray = session.supportedFileTypes;
-        if ([supportedTypeArray containsObject:AVFileTypeMPEG4]) {
-            session.outputFileType = AVFileTypeMPEG4;
-        } else if (supportedTypeArray.count == 0) {
-            NSLog(@"No supported file types 视频类型暂不支持导出");
-            return;
-        } else {
-            session.outputFileType = [supportedTypeArray objectAtIndex:0];
-        }
-        
-        if (![[NSFileManager defaultManager] fileExistsAtPath:[NSHomeDirectory() stringByAppendingFormat:@"/tmp"]]) {
-            [[NSFileManager defaultManager] createDirectoryAtPath:[NSHomeDirectory() stringByAppendingFormat:@"/tmp"] withIntermediateDirectories:YES attributes:nil error:nil];
-        }
-
-        // Begin to export video to the output path asynchronously.
-        [session exportAsynchronouslyWithCompletionHandler:^(void) {
-            switch (session.status) {
-                case AVAssetExportSessionStatusUnknown:
-                    NSLog(@"AVAssetExportSessionStatusUnknown"); break;
-                case AVAssetExportSessionStatusWaiting:
-                    NSLog(@"AVAssetExportSessionStatusWaiting"); break;
-                case AVAssetExportSessionStatusExporting:
-                    NSLog(@"AVAssetExportSessionStatusExporting"); break;
-                case AVAssetExportSessionStatusCompleted: {
-                    NSLog(@"AVAssetExportSessionStatusCompleted");
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        if (completion) {
-                            completion(outputPath);
-                        }
-                    });
-                }  break;
-                case AVAssetExportSessionStatusFailed:
-                    NSLog(@"AVAssetExportSessionStatusFailed"); break;
-                default: break;
+            
+            NSArray *compatiblePresets = [AVAssetExportSession exportPresetsCompatibleWithAsset:myAsset];
+            // NSLog(@"%@",compatiblePresets);
+            
+            if ([compatiblePresets containsObject:AVAssetExportPresetHighestQuality]) {
+                AVAssetExportSession *exportSession = [[AVAssetExportSession alloc] initWithAsset:myAsset presetName:AVAssetExportPresetMediumQuality];
+                NSDateFormatter *formater = [[NSDateFormatter alloc] init];
+                [formater setDateFormat:@"yyyy-MM-dd-HH:mm:ss"];
+                NSString *outputPath = [NSHomeDirectory() stringByAppendingFormat:@"/tmp/output-%@.mp4", [formater stringFromDate:[NSDate date]]];
+                NSLog(@"video outputPath = %@",outputPath);
+                
+                exportSession.outputURL = [NSURL fileURLWithPath:outputPath];
+                exportSession.outputFileType = AVFileTypeMPEG4;
+                exportSession.shouldOptimizeForNetworkUse = YES;
+                [exportSession exportAsynchronouslyWithCompletionHandler:^(void) {
+                    switch (exportSession.status) {
+                        case AVAssetExportSessionStatusUnknown:
+                            NSLog(@"AVAssetExportSessionStatusUnknown"); break;
+                        case AVAssetExportSessionStatusWaiting:
+                            NSLog(@"AVAssetExportSessionStatusWaiting"); break;
+                        case AVAssetExportSessionStatusExporting:
+                            NSLog(@"AVAssetExportSessionStatusExporting"); break;
+                        case AVAssetExportSessionStatusCompleted:
+                            NSLog(@"AVAssetExportSessionStatusCompleted");
+                            if (completion) {
+                                completion(outputPath);
+                            }
+                            break;
+                        case AVAssetExportSessionStatusFailed:
+                            NSLog(@"AVAssetExportSessionStatusFailed"); break;
+                        default: break;
+                    }
+                }];
             }
         }];
+    } else {
+        NSLog(@"iOS8以前的系统，导出视频代码暂未更新...");
     }
 }
 
@@ -669,13 +548,10 @@ static CGFloat TZScreenScale;
         return [assets containsObject:asset];
     } else {
         NSMutableArray *selectedAssetUrls = [NSMutableArray array];
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
         for (ALAsset *asset_item in assets) {
             [selectedAssetUrls addObject:[asset_item valueForProperty:ALAssetPropertyURLs]];
         }
         return [selectedAssetUrls containsObject:[asset valueForProperty:ALAssetPropertyURLs]];
-#pragma clang diagnostic pop
     }
 }
 
@@ -684,11 +560,8 @@ static CGFloat TZScreenScale;
         PHAsset *phAsset = (PHAsset *)asset;
         return phAsset.localIdentifier;
     } else {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
         ALAsset *alAsset = (ALAsset *)asset;
         NSURL *assetUrl = [alAsset valueForProperty:ALAssetPropertyAssetURL];
-#pragma clang diagnostic pop
         return assetUrl.absoluteString;
     }
 }
@@ -702,32 +575,31 @@ static CGFloat TZScreenScale;
     if ([result isKindOfClass:[PHFetchResult class]]) {
         PHFetchResult *fetchResult = (PHFetchResult *)result;
         model.count = fetchResult.count;
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     } else if ([result isKindOfClass:[ALAssetsGroup class]]) {
         ALAssetsGroup *group = (ALAssetsGroup *)result;
         model.count = [group numberOfAssets];
-#pragma clang diagnostic pop
     }
     return model;
 }
 
 - (NSString *)getNewAlbumName:(NSString *)name {
-    if (iOS8Later) {
-        NSString *newName;
-        if ([name rangeOfString:@"Roll"].location != NSNotFound)         newName = @"相机胶卷";
-        else if ([name rangeOfString:@"Stream"].location != NSNotFound)  newName = @"我的照片流";
-        else if ([name rangeOfString:@"Added"].location != NSNotFound)   newName = @"最近添加";
-        else if ([name rangeOfString:@"Selfies"].location != NSNotFound) newName = @"自拍";
-        else if ([name rangeOfString:@"shots"].location != NSNotFound)   newName = @"截屏";
-        else if ([name rangeOfString:@"Videos"].location != NSNotFound)  newName = @"视频";
-        else if ([name rangeOfString:@"Panoramas"].location != NSNotFound)  newName = @"全景照片";
-        else if ([name rangeOfString:@"Favorites"].location != NSNotFound)  newName = @"个人收藏";
-        else newName = name;
-        return newName;
-    } else {
-        return name;
-    }
+    //MARK: - Modified by yangfan
+    return name;
+//    if (iOS8Later) {
+//        NSString *newName;
+//        if ([name rangeOfString:@"Roll"].location != NSNotFound)         newName = @"相机胶卷";
+//        else if ([name rangeOfString:@"Stream"].location != NSNotFound)  newName = @"我的照片流";
+//        else if ([name rangeOfString:@"Added"].location != NSNotFound)   newName = @"最近添加";
+//        else if ([name rangeOfString:@"Selfies"].location != NSNotFound) newName = @"自拍";
+//        else if ([name rangeOfString:@"shots"].location != NSNotFound)   newName = @"截屏";
+//        else if ([name rangeOfString:@"Videos"].location != NSNotFound)  newName = @"视频";
+//        else if ([name rangeOfString:@"Panoramas"].location != NSNotFound)  newName = @"全景照片";
+//        else if ([name rangeOfString:@"Favorites"].location != NSNotFound)  newName = @"个人收藏";
+//        else newName = name;
+//        return newName;
+//    } else {
+//        return name;
+//    }
 }
 
 - (UIImage *)scaleImage:(UIImage *)image toSize:(CGSize)size {
@@ -741,10 +613,8 @@ static CGFloat TZScreenScale;
         return image;
     }
 }
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
 - (ALAssetOrientation)orientationFromImage:(UIImage *)image {
-#pragma clang diagnostic pop
     NSInteger orientation = image.imageOrientation;
     return orientation;
 }

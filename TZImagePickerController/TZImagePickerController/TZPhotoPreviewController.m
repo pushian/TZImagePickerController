@@ -29,8 +29,6 @@
     UILabel *_numberLable;
     UIButton *_originalPhotoButton;
     UILabel *_originalPhotoLable;
-    
-    CGFloat _minimumLineSpacing;
 }
 @end
 
@@ -45,7 +43,6 @@
         _assetsTemp = [NSMutableArray arrayWithArray:_tzImagePickerVc.selectedAssets];
         self.isSelectOriginalPhoto = _tzImagePickerVc.isSelectOriginalPhoto;
     }
-    _minimumLineSpacing = 20;
     [self configCollectionView];
     [self configCustomNaviBar];
     [self configBottomToolBar];
@@ -60,7 +57,7 @@
     [super viewWillAppear:animated];
     [self.navigationController setNavigationBarHidden:YES];
     if (iOS7Later) [UIApplication sharedApplication].statusBarHidden = YES;
-    if (_currentIndex) [_collectionView setContentOffset:CGPointMake((self.view.tz_width + _minimumLineSpacing) * _currentIndex, 0) animated:NO];
+    if (_currentIndex) [_collectionView setContentOffset:CGPointMake((self.view.tz_width) * _currentIndex, 0) animated:NO];
     [self refreshNaviBarAndBottomBarState];
 }
 
@@ -105,15 +102,15 @@
         _originalPhotoButton.backgroundColor = [UIColor clearColor];
         [_originalPhotoButton addTarget:self action:@selector(originalPhotoButtonClick) forControlEvents:UIControlEventTouchUpInside];
         _originalPhotoButton.titleLabel.font = [UIFont systemFontOfSize:13];
-        [_originalPhotoButton setTitle:@"原图" forState:UIControlStateNormal];
-        [_originalPhotoButton setTitle:@"原图" forState:UIControlStateSelected];
+        [_originalPhotoButton setTitle:@"Original" forState:UIControlStateNormal];
+        [_originalPhotoButton setTitle:@"Original" forState:UIControlStateSelected];
         [_originalPhotoButton setTitleColor:[UIColor lightGrayColor] forState:UIControlStateNormal];
         [_originalPhotoButton setTitleColor:[UIColor whiteColor] forState:UIControlStateSelected];
         [_originalPhotoButton setImage:[UIImage imageNamedFromMyBundle:@"preview_original_def.png"] forState:UIControlStateNormal];
         [_originalPhotoButton setImage:[UIImage imageNamedFromMyBundle:@"photo_original_sel.png"] forState:UIControlStateSelected];
         
         _originalPhotoLable = [[UILabel alloc] init];
-        _originalPhotoLable.frame = CGRectMake(60, 0, 70, 44);
+        _originalPhotoLable.frame = CGRectMake(70, 0, 70, 44);
         _originalPhotoLable.textAlignment = NSTextAlignmentLeft;
         _originalPhotoLable.font = [UIFont systemFontOfSize:13];
         _originalPhotoLable.textColor = [UIColor whiteColor];
@@ -125,7 +122,7 @@
     _okButton.frame = CGRectMake(self.view.tz_width - 44 - 12, 0, 44, 44);
     _okButton.titleLabel.font = [UIFont systemFontOfSize:16];
     [_okButton addTarget:self action:@selector(okButtonClick) forControlEvents:UIControlEventTouchUpInside];
-    [_okButton setTitle:@"确定" forState:UIControlStateNormal];
+    [_okButton setTitle:@"Done" forState:UIControlStateNormal];
     [_okButton setTitleColor:_tzImagePickerVc.oKButtonTitleColorNormal forState:UIControlStateNormal];
     
     _numberImageView = [[UIImageView alloc] initWithImage:[UIImage imageNamedFromMyBundle:@"photo_number_icon.png"]];
@@ -155,11 +152,12 @@
     layout.scrollDirection = UICollectionViewScrollDirectionHorizontal;
     layout.itemSize = CGSizeMake(self.view.tz_width, self.view.tz_height);
     layout.minimumInteritemSpacing = 0;
-    layout.minimumLineSpacing = _minimumLineSpacing;
+    layout.minimumLineSpacing = 0;
     _collectionView = [[UICollectionView alloc] initWithFrame:CGRectMake(0, 0, self.view.tz_width , self.view.tz_height) collectionViewLayout:layout];
     _collectionView.backgroundColor = [UIColor blackColor];
     _collectionView.dataSource = self;
     _collectionView.delegate = self;
+    _collectionView.pagingEnabled = YES;
     _collectionView.scrollsToTop = NO;
     _collectionView.showsHorizontalScrollIndicator = NO;
     _collectionView.contentOffset = CGPointMake(0, 0);
@@ -176,7 +174,7 @@
     if (!selectButton.isSelected) {
         // 1. select:check if over the maxImagesCount / 选择照片,检查是否超过了最大个数的限制
         if (_tzImagePickerVc.selectedModels.count >= _tzImagePickerVc.maxImagesCount) {
-            [_tzImagePickerVc showAlertWithTitle:[NSString stringWithFormat:@"你最多只能选择%zd张照片",_tzImagePickerVc.maxImagesCount]];
+            [_tzImagePickerVc showAlertWithTitle:[NSString stringWithFormat:@"You can choose %zd photos at most now.",_tzImagePickerVc.maxImagesCount]];
             return;
         // 2. if not over the maxImagesCount / 如果没有超过最大个数限制
         } else {
@@ -192,13 +190,12 @@
     } else {
         NSArray *selectedModels = [NSArray arrayWithArray:_tzImagePickerVc.selectedModels];
         for (TZAssetModel *model_item in selectedModels) {
-            if ([[[TZImageManager manager] getAssetIdentifier:model.asset] isEqualToString:[[TZImageManager manager] getAssetIdentifier:model_item.asset]]) {
+            if ([model.asset isEqual:model_item.asset]) {
                 [_tzImagePickerVc.selectedModels removeObject:model_item];
                 if (self.photos) {
                     [_tzImagePickerVc.selectedAssets removeObject:_assetsTemp[_currentIndex]];
                     [self.photos removeObject:_photosTemp[_currentIndex]];
                 }
-                break;
             }
         }
     }
@@ -249,17 +246,8 @@
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
     CGPoint offSet = scrollView.contentOffset;
-    CGFloat offSetWidth = offSet.x;
-    if ((offSetWidth + ((self.view.tz_width + _minimumLineSpacing) * 0.5)) < scrollView.contentSize.width + _minimumLineSpacing) {
-        offSetWidth = offSetWidth +  ((self.view.tz_width + _minimumLineSpacing) * 0.5);
-    }
-    
-    NSInteger currentIndex = offSetWidth / (self.view.tz_width + _minimumLineSpacing);
-    
-    if (_currentIndex != currentIndex) {
-        _currentIndex = currentIndex;
-        [self refreshNaviBarAndBottomBarState];
-    }
+    _currentIndex = (offSet.x + (self.view.tz_width * 0.5)) / self.view.tz_width;
+    [self refreshNaviBarAndBottomBarState];
 }
 
 #pragma mark - UICollectionViewDataSource && Delegate
@@ -284,43 +272,6 @@
         };
     }
     return cell;
-}
-
-- (void)collectionView:(UICollectionView *)collectionView willDisplayCell:(UICollectionViewCell *)cell forItemAtIndexPath:(NSIndexPath *)indexPath {
-    if ([cell isKindOfClass:[TZPhotoPreviewCell class]]) {
-        [(TZPhotoPreviewCell *)cell recoverSubviews];
-    }
-}
-
-- (void)collectionView:(UICollectionView *)collectionView didEndDisplayingCell:(UICollectionViewCell *)cell forItemAtIndexPath:(NSIndexPath *)indexPath {
-    if ([cell isKindOfClass:[TZPhotoPreviewCell class]]) {
-        [(TZPhotoPreviewCell *)cell recoverSubviews];
-    }
-}
-
-- (void)scrollViewWillEndDragging:(UIScrollView *)scrollView withVelocity:(CGPoint)velocity targetContentOffset:(inout CGPoint *)targetContentOffset {
-    CGFloat contentOffsetX = scrollView.contentOffset.x;
-    NSInteger MAX_INDEX = (scrollView.contentSize.width + _minimumLineSpacing)/(self.view.tz_width + _minimumLineSpacing) - 1;
-    NSInteger MIN_INDEX = 0;
-    
-    NSInteger index = contentOffsetX/(self.view.tz_width + _minimumLineSpacing);
-    
-    if (velocity.x > 0.4 && contentOffsetX < (*targetContentOffset).x) {
-        index = index + 1;
-    }
-    else if (velocity.x < -0.4 && contentOffsetX > (*targetContentOffset).x) {
-        index = index;
-    }
-    else if (contentOffsetX > (index + 0.5) * (self.view.tz_width + _minimumLineSpacing)) {
-        index = index + 1;
-    }
-    
-    if (index > MAX_INDEX) index = MAX_INDEX;
-    if (index < MIN_INDEX) index = MIN_INDEX;
-    
-    CGPoint newTargetContentOffset= CGPointMake(index * (self.view.tz_width + _minimumLineSpacing), 0);
-    *targetContentOffset = CGPointMake(scrollView.contentOffset.x, 0);
-    [scrollView setContentOffset:newTargetContentOffset animated:YES];
 }
 
 #pragma mark - Private Method

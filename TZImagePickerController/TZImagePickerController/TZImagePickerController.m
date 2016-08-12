@@ -33,48 +33,45 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.view.backgroundColor = [UIColor whiteColor];
-    self.navigationBar.barStyle = UIBarStyleBlack;
-    self.navigationBar.translucent = YES;
-    [TZImageManager manager].shouldFixOrientation = NO;
-
-    // Default appearance, you can reset these after this method
-    // 默认的外观，你可以在这个方法后重置
-    self.oKButtonTitleColorNormal   = [UIColor colorWithRed:(83/255.0) green:(179/255.0) blue:(17/255.0) alpha:1.0];
-    self.oKButtonTitleColorDisabled = [UIColor colorWithRed:(83/255.0) green:(179/255.0) blue:(17/255.0) alpha:0.5];
-    
-    if (iOS7Later) {
-        self.navigationBar.barTintColor = [UIColor colorWithRed:(34/255.0) green:(34/255.0)  blue:(34/255.0) alpha:1.0];
-        self.navigationBar.tintColor = [UIColor whiteColor];
+    //MARK: - Modified by yangfan
+//    self.navigationBar.barStyle = UIBarStyleBlack;
+//    self.navigationBar.translucent = YES;
+//    [TZImageManager manager].shouldFixOrientation = NO;
+//
+//    // Default appearance, you can reset these after this method
+//    // 默认的外观，你可以在这个方法后重置
+//    self.oKButtonTitleColorNormal   = [UIColor colorWithRed:(83/255.0) green:(179/255.0) blue:(17/255.0) alpha:1.0];
+//    self.oKButtonTitleColorDisabled = [UIColor colorWithRed:(83/255.0) green:(179/255.0) blue:(17/255.0) alpha:0.5];
+//
+//    if (iOS7Later) {
+//        self.navigationBar.barTintColor = [UIColor colorWithRed:(34/255.0) green:(34/255.0)  blue:(34/255.0) alpha:1.0];
+//        self.navigationBar.tintColor = [UIColor whiteColor];
         self.automaticallyAdjustsScrollViewInsets = NO;
-    }
-        
-    UIBarButtonItem *barItem;
-    if (iOS9Later) {
-        barItem = [UIBarButtonItem appearanceWhenContainedInInstancesOfClasses:@[[TZImagePickerController class]]];
-    } else {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-        barItem = [UIBarButtonItem appearanceWhenContainedIn:[TZImagePickerController class], nil];
-#pragma clang diagnostic pop
-    }
-    NSMutableDictionary *textAttrs = [NSMutableDictionary dictionary];
-    textAttrs[NSForegroundColorAttributeName] = [UIColor whiteColor];
-    textAttrs[NSFontAttributeName] = [UIFont systemFontOfSize:15];
-    [barItem setTitleTextAttributes:textAttrs forState:UIControlStateNormal];
+//    }
+//        
+//    UIBarButtonItem *barItem;
+//    if (iOS9Later) {
+//        barItem = [UIBarButtonItem appearanceWhenContainedInInstancesOfClasses:@[[TZImagePickerController class]]];
+//    } else {
+//        barItem = [UIBarButtonItem appearanceWhenContainedIn:[TZImagePickerController class], nil];
+//    }
+//    NSMutableDictionary *textAttrs = [NSMutableDictionary dictionary];
+//    textAttrs[NSForegroundColorAttributeName] = [UIColor whiteColor];
+//    textAttrs[NSFontAttributeName] = [UIFont systemFontOfSize:15];
+//    [barItem setTitleTextAttributes:textAttrs forState:UIControlStateNormal];
 }
 
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
-    _originStatusBarStyle = [UIApplication sharedApplication].statusBarStyle;
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    [UIApplication sharedApplication].statusBarStyle = iOS7Later ? UIStatusBarStyleLightContent : UIStatusBarStyleBlackOpaque;
-#pragma clang diagnostic pop
+    //MARK: - Modified by yangfan
+//    _originStatusBarStyle = [UIApplication sharedApplication].statusBarStyle;
+//    [UIApplication sharedApplication].statusBarStyle = iOS7Later ? UIStatusBarStyleLightContent : UIStatusBarStyleBlackOpaque;
 }
 
 - (void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
-    [UIApplication sharedApplication].statusBarStyle = _originStatusBarStyle;
+    //MARK: - Modified by yangfan
+//    [UIApplication sharedApplication].statusBarStyle = _originStatusBarStyle;
     [self hideProgressHUD];
 }
 
@@ -99,14 +96,16 @@
         
         if (![[TZImageManager manager] authorizationStatusAuthorized]) {
             _tipLable = [[UILabel alloc] init];
-            _tipLable.frame = CGRectMake(8, 0, self.view.tz_width - 16, 300);
+            _tipLable.frame = CGRectMake(15, 0, self.view.tz_width - 30, 300);
             _tipLable.textAlignment = NSTextAlignmentCenter;
             _tipLable.numberOfLines = 0;
             _tipLable.font = [UIFont systemFontOfSize:16];
             _tipLable.textColor = [UIColor blackColor];
             NSString *appName = [[NSBundle mainBundle].infoDictionary valueForKey:@"CFBundleDisplayName"];
             if (!appName) appName = [[NSBundle mainBundle].infoDictionary valueForKey:@"CFBundleName"];
-            _tipLable.text = [NSString stringWithFormat:@"请在%@的\"设置-隐私-照片\"选项中，\r允许%@访问你的手机相册。",[UIDevice currentDevice].model,appName];
+            //MARK: - Modified by yangfan
+//            _tipLable.text = [NSString stringWithFormat:@"请在%@的\"设置-隐私-照片\"选项中，\r允许%@访问你的手机相册。",[UIDevice currentDevice].model,appName];
+            _tipLable.text = [NSString stringWithFormat:@"Please open the permission to access the photos for %@ \rat %@ 's \r\"Settings-Privacy-Photos\".",appName, [UIDevice currentDevice].model];
             [self.view addSubview:_tipLable];
             
             _timer = [NSTimer scheduledTimerWithTimeInterval:0.2 target:self selector:@selector(observeAuthrizationStatusChange) userInfo:nil repeats:YES];
@@ -167,13 +166,10 @@
 - (void)showAlertWithTitle:(NSString *)title {
     if (iOS8Later) {
         UIAlertController *alertController = [UIAlertController alertControllerWithTitle:title message:nil preferredStyle:UIAlertControllerStyleAlert];
-        [alertController addAction:[UIAlertAction actionWithTitle:@"我知道了" style:UIAlertActionStyleDefault handler:nil]];
+        [alertController addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
         [self presentViewController:alertController animated:YES completion:nil];
     } else {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-        [[[UIAlertView alloc] initWithTitle:title message:nil delegate:nil cancelButtonTitle:@"我知道了" otherButtonTitles:nil, nil] show];
-#pragma clang diagnostic pop
+        [[[UIAlertView alloc] initWithTitle:title message:nil delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil, nil] show];
     }
 }
 
@@ -195,7 +191,7 @@
         _HUDLable = [[UILabel alloc] init];
         _HUDLable.frame = CGRectMake(0,40, 120, 50);
         _HUDLable.textAlignment = NSTextAlignmentCenter;
-        _HUDLable.text = @"正在处理...";
+        _HUDLable.text = @"Processing...";
         _HUDLable.font = [UIFont systemFontOfSize:15];
         _HUDLable.textColor = [UIColor whiteColor];
         
@@ -271,30 +267,17 @@
     if (iOS7Later) viewController.automaticallyAdjustsScrollViewInsets = NO;
     if (_timer) { [_timer invalidate]; _timer = nil;}
     
+    //MARK: - Modified by yangfan
     if (self.childViewControllers.count > 0) {
-        UIButton *backButton = [[UIButton alloc] initWithFrame:CGRectMake(3, 0, 50, 44)];
-        [backButton setImage:[UIImage imageNamedFromMyBundle:@"navi_back.png"] forState:UIControlStateNormal];
-        backButton.imageEdgeInsets = UIEdgeInsetsMake(0, -5, 0, 0);
-        [backButton setTitle:@"返回" forState:UIControlStateNormal];
-        backButton.titleLabel.font = [UIFont systemFontOfSize:15];
-        [backButton addTarget:self action:@selector(popViewControllerAnimated:) forControlEvents:UIControlEventTouchUpInside];
-        UIBarButtonItem* backButtonItem = [[UIBarButtonItem alloc] initWithCustomView:backButton];
-        
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-        backButtonItem.style = UIBarButtonItemStyleBordered;
-#pragma clang diagnostic pop
-        self.topViewController.navigationItem.backBarButtonItem = backButtonItem;
-        
-        /**
-         另外一种只有箭头的返回键
-         
-         UIBarButtonItem *backItem = [[UIBarButtonItem alloc] initWithTitle:@"" style:UIBarButtonItemStyleBordered target:nil action:nil];
-         self.topViewController.navigationItem.backBarButtonItem = backItem;
-         
-        */
+//        UIButton *backButton = [[UIButton alloc] initWithFrame:CGRectMake(3, 0, 50, 44)];
+//        [backButton setImage:[UIImage imageNamedFromMyBundle:@"navi_back.png"] forState:UIControlStateNormal];
+//        backButton.imageEdgeInsets = UIEdgeInsetsMake(0, -5, 0, 0);
+//        [backButton setTitle:@"返回" forState:UIControlStateNormal];
+//        backButton.titleLabel.font = [UIFont systemFontOfSize:15];
+//        [backButton addTarget:self action:@selector(popViewControllerAnimated:) forControlEvents:UIControlEventTouchUpInside];
+//        viewController.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:backButton];
+//        viewController.navigationItem.leftBarButtonItem.title = @"";
     }
-    
     [super pushViewController:viewController animated:animated];
 }
 
@@ -312,8 +295,9 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.view.backgroundColor = [UIColor whiteColor];
-    self.navigationItem.title = @"照片";
-    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"取消" style:UIBarButtonItemStylePlain target:self action:@selector(cancel)];
+    //MARK: - Modified by yangfan
+    self.navigationItem.title = @"Photos";
+    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Cancel" style:UIBarButtonItemStylePlain target:self action:@selector(cancel)];
     [self configTableView];
 }
 
@@ -341,7 +325,9 @@
         if (!_tableView) {
             CGFloat top = 44;
             if (iOS7Later) top += 20;
-            _tableView = [[UITableView alloc] initWithFrame:CGRectMake(0, top, self.view.tz_width, self.view.tz_height - top) style:UITableViewStylePlain];
+            // Modified by yangfan
+//            _tableView = [[UITableView alloc] initWithFrame:CGRectMake(0, top, self.view.tz_width, self.view.tz_height - top) style:UITableViewStylePlain];
+            _tableView = [[UITableView alloc] initWithFrame:CGRectMake(0, 0, self.view.tz_width, self.view.tz_height - top) style:UITableViewStylePlain];
             _tableView.rowHeight = 70;
             _tableView.tableFooterView = [[UIView alloc] init];
             _tableView.dataSource = self;

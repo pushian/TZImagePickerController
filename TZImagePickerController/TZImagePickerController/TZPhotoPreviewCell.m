@@ -69,11 +69,6 @@
     }];
 }
 
-- (void)recoverSubviews {
-    [_scrollView setZoomScale:1.0 animated:NO];
-    [self resizeSubviews];
-}
-
 - (void)resizeSubviews {
     _imageContainerView.tz_origin = CGPointZero;
     _imageContainerView.tz_width = self.tz_width;

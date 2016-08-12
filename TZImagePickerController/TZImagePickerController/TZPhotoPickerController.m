@@ -50,11 +50,8 @@ static CGSize AssetGridThumbnailSize;
             tzBarItem = [UIBarButtonItem appearanceWhenContainedInInstancesOfClasses:@[[TZImagePickerController class]]];
             BarItem = [UIBarButtonItem appearanceWhenContainedInInstancesOfClasses:@[[UIImagePickerController class]]];
         } else {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
             tzBarItem = [UIBarButtonItem appearanceWhenContainedIn:[TZImagePickerController class], nil];
             BarItem = [UIBarButtonItem appearanceWhenContainedIn:[UIImagePickerController class], nil];
-#pragma clang diagnostic pop
         }
         NSDictionary *titleTextAttributes = [tzBarItem titleTextAttributesForState:UIControlStateNormal];
         [BarItem setTitleTextAttributes:titleTextAttributes forState:UIControlStateNormal];
@@ -69,7 +66,7 @@ static CGSize AssetGridThumbnailSize;
     _shouldScrollToBottom = YES;
     self.view.backgroundColor = [UIColor whiteColor];
     self.navigationItem.title = _model.name;
-    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"取消" style:UIBarButtonItemStylePlain target:self action:@selector(cancel)];
+    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Cancel" style:UIBarButtonItemStylePlain target:self action:@selector(cancel)];
     _showTakePhotoBtn = (([_model.name isEqualToString:@"相机胶卷"] || [_model.name isEqualToString:@"Camera Roll"] ||  [_model.name isEqualToString:@"所有照片"] || [_model.name isEqualToString:@"All Photos"]) && tzImagePickerVc.allowTakePicture);
     if (!tzImagePickerVc.sortAscendingByModificationDate && _isFirstAppear && iOS8Later) {
         [[TZImageManager manager] getCameraRollAlbum:tzImagePickerVc.allowPickingVideo allowPickingImage:tzImagePickerVc.allowPickingImage completion:^(TZAlbumModel *model) {
@@ -113,9 +110,14 @@ static CGSize AssetGridThumbnailSize;
     layout.itemSize = CGSizeMake(itemWH, itemWH);
     layout.minimumInteritemSpacing = margin;
     layout.minimumLineSpacing = margin;
-    CGFloat top = margin + 44;
+    // Modified by yangfan
+//    CGFloat top = margin + 44;
+//    if (iOS7Later) top += 20;
+//    _collectionView = [[UICollectionView alloc] initWithFrame:CGRectMake(margin, top, self.view.tz_width - 2 * margin, self.view.tz_height - 50 - top) collectionViewLayout:layout];
+    CGFloat top = 44;
     if (iOS7Later) top += 20;
-    _collectionView = [[UICollectionView alloc] initWithFrame:CGRectMake(margin, top, self.view.tz_width - 2 * margin, self.view.tz_height - 50 - top) collectionViewLayout:layout];
+    _collectionView = [[UICollectionView alloc] initWithFrame:CGRectMake(margin, margin, self.view.tz_width - 2 * margin, self.view.tz_height - 50 - top - 2 * margin) collectionViewLayout:layout];
+
     _collectionView.backgroundColor = [UIColor whiteColor];
     _collectionView.dataSource = self;
     _collectionView.delegate = self;
@@ -155,29 +157,33 @@ static CGSize AssetGridThumbnailSize;
 
 - (void)configBottomToolBar {
     TZImagePickerController *tzImagePickerVc = (TZImagePickerController *)self.navigationController;
-    UIView *bottomToolBar = [[UIView alloc] initWithFrame:CGRectMake(0, self.view.tz_height - 50, self.view.tz_width, 50)];
+    //Modified by yangfan
+//    UIView *bottomToolBar = [[UIView alloc] initWithFrame:CGRectMake(0, self.view.tz_height - 50, self.view.tz_width, 50)];
+    UIView *bottomToolBar = [[UIView alloc] initWithFrame:CGRectMake(0, self.view.tz_height - 64 - 50, self.view.tz_width, 50)];
     CGFloat rgb = 253 / 255.0;
     bottomToolBar.backgroundColor = [UIColor colorWithRed:rgb green:rgb blue:rgb alpha:1.0];
-    
+
     _previewButton = [UIButton buttonWithType:UIButtonTypeCustom];
-    _previewButton.frame = CGRectMake(10, 3, 44, 44);
+    _previewButton.frame = CGRectMake(10, 3, 60, 44);
     [_previewButton addTarget:self action:@selector(previewButtonClick) forControlEvents:UIControlEventTouchUpInside];
     _previewButton.titleLabel.font = [UIFont systemFontOfSize:16];
-    [_previewButton setTitle:@"预览" forState:UIControlStateNormal];
-    [_previewButton setTitle:@"预览" forState:UIControlStateDisabled];
+    [_previewButton setTitle:@"Preview" forState:UIControlStateNormal];
+    [_previewButton setTitle:@"Preview" forState:UIControlStateDisabled];
     [_previewButton setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
     [_previewButton setTitleColor:[UIColor lightGrayColor] forState:UIControlStateDisabled];
     _previewButton.enabled = tzImagePickerVc.selectedModels.count;
     
     if (tzImagePickerVc.allowPickingOriginalPhoto) {
         _originalPhotoButton = [UIButton buttonWithType:UIButtonTypeCustom];
-        _originalPhotoButton.frame = CGRectMake(50, self.view.tz_height - 50, 130, 50);
+        //Modified by yangfan
+//        _originalPhotoButton.frame = CGRectMake(50, self.view.tz_height - 50, 130, 50);
+        _originalPhotoButton.frame = CGRectMake(80, self.view.tz_height - 64 - 50, 130, 50);
         _originalPhotoButton.imageEdgeInsets = UIEdgeInsetsMake(0, -8, 0, 0);
         _originalPhotoButton.contentEdgeInsets = UIEdgeInsetsMake(0, -45, 0, 0);
         [_originalPhotoButton addTarget:self action:@selector(originalPhotoButtonClick) forControlEvents:UIControlEventTouchUpInside];
         _originalPhotoButton.titleLabel.font = [UIFont systemFontOfSize:16];
-        [_originalPhotoButton setTitle:@"原图" forState:UIControlStateNormal];
-        [_originalPhotoButton setTitle:@"原图" forState:UIControlStateSelected];
+        [_originalPhotoButton setTitle:@"Original" forState:UIControlStateNormal];
+        [_originalPhotoButton setTitle:@"Original" forState:UIControlStateSelected];
         [_originalPhotoButton setTitleColor:[UIColor lightGrayColor] forState:UIControlStateNormal];
         [_originalPhotoButton setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
         [_originalPhotoButton setImage:[UIImage imageNamedFromMyBundle:@"photo_original_def.png"] forState:UIControlStateNormal];
@@ -186,7 +192,7 @@ static CGSize AssetGridThumbnailSize;
         _originalPhotoButton.enabled = tzImagePickerVc.selectedModels.count > 0;
         
         _originalPhotoLable = [[UILabel alloc] init];
-        _originalPhotoLable.frame = CGRectMake(70, 0, 60, 50);
+        _originalPhotoLable.frame = CGRectMake(82, 0, 60, 50);
         _originalPhotoLable.textAlignment = NSTextAlignmentLeft;
         _originalPhotoLable.font = [UIFont systemFontOfSize:16];
         _originalPhotoLable.textColor = [UIColor blackColor];
@@ -197,10 +203,12 @@ static CGSize AssetGridThumbnailSize;
     _okButton.frame = CGRectMake(self.view.tz_width - 44 - 12, 3, 44, 44);
     _okButton.titleLabel.font = [UIFont systemFontOfSize:16];
     [_okButton addTarget:self action:@selector(okButtonClick) forControlEvents:UIControlEventTouchUpInside];
-    [_okButton setTitle:@"确定" forState:UIControlStateNormal];
-    [_okButton setTitle:@"确定" forState:UIControlStateDisabled];
-    [_okButton setTitleColor:tzImagePickerVc.oKButtonTitleColorNormal forState:UIControlStateNormal];
-    [_okButton setTitleColor:tzImagePickerVc.oKButtonTitleColorDisabled forState:UIControlStateDisabled];
+    [_okButton setTitle:@"Done" forState:UIControlStateNormal];
+    [_okButton setTitle:@"Done" forState:UIControlStateDisabled];
+//    [_okButton setTitleColor:tzImagePickerVc.oKButtonTitleColorNormal forState:UIControlStateNormal];
+    //    [_okButton setTitleColor:tzImagePickerVc.oKButtonTitleColorDisabled forState:UIControlStateDisabled];
+    [_okButton setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+    [_okButton setTitleColor:[UIColor lightGrayColor] forState:UIControlStateDisabled];
     _okButton.enabled = tzImagePickerVc.selectedModels.count;
     
     _numberImageView = [[UIImageView alloc] initWithImage:[UIImage imageNamedFromMyBundle:@"photo_number_icon.png"]];
@@ -340,7 +348,6 @@ static CGSize AssetGridThumbnailSize;
             for (TZAssetModel *model_item in selectedModels) {
                 if ([[[TZImageManager manager] getAssetIdentifier:model.asset] isEqualToString:[[TZImageManager manager] getAssetIdentifier:model_item.asset]]) {
                     [tzImagePickerVc.selectedModels removeObject:model_item];
-                    break;
                 }
             }
             [weakSelf refreshBottomToolBarStatus];
@@ -352,7 +359,7 @@ static CGSize AssetGridThumbnailSize;
                 [tzImagePickerVc.selectedModels addObject:model];
                 [weakSelf refreshBottomToolBarStatus];
             } else {
-                [tzImagePickerVc showAlertWithTitle:[NSString stringWithFormat:@"你最多只能选择%zd张照片",tzImagePickerVc.maxImagesCount]];
+                [tzImagePickerVc showAlertWithTitle:[NSString stringWithFormat:@"You can choose %zd photos at most now.",tzImagePickerVc.maxImagesCount]];
             }
         }
         [UIView showOscillatoryAnimationWithLayer:weakLayer type:TZOscillatoryAnimationToSmaller];
@@ -402,12 +409,9 @@ static CGSize AssetGridThumbnailSize;
 - (void)takePhoto {
     AVAuthorizationStatus authStatus = [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeVideo];
     if ((authStatus == AVAuthorizationStatusRestricted || authStatus ==AVAuthorizationStatusDenied) && iOS8Later) {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
         // 无权限 做一个友好的提示
         UIAlertView * alert = [[UIAlertView alloc]initWithTitle:@"无法使用相机" message:@"请在iPhone的""设置-隐私-相机""中允许访问相机" delegate:self cancelButtonTitle:@"取消" otherButtonTitles:@"设置", nil];
         [alert show];
-#pragma clang diagnostic pop
     } else { // 调用相机
         UIImagePickerControllerSourceType sourceType = UIImagePickerControllerSourceTypeCamera;
         if ([UIImagePickerController isSourceTypeAvailable: UIImagePickerControllerSourceTypeCamera]) {
@@ -503,10 +507,7 @@ static CGSize AssetGridThumbnailSize;
 
 #pragma mark - UIAlertViewDelegate
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 - (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex {
-#pragma clang diagnostic pop
     if (buttonIndex == 1) { // 去设置界面，开启相机访问权限
         if (iOS8Later) {
             [[UIApplication sharedApplication] openURL:[NSURL URLWithString:UIApplicationOpenSettingsURLString]];
